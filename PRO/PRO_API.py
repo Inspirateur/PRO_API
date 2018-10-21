@@ -334,15 +334,15 @@ class User:
 	def select(self, question: str, choices: list)->Tuple[int, str]:
 		print(question)
 		for i, choice in enumerate(choices):
-			print(f"{i+1}: {choice}")
+			print(f"{i}: {choice}")
 		while True:
 			choice = input("> ")
 			if choice.isdecimal():
-				val = int(choice)-1
+				val = int(choice)
 				if 0 <= val < len(choices):
 					return val, choices[val]
 				else:
-					print(f"{val+1} is out of the range of possible choices [1,{len(choices)}]")
+					print(f"{val} is out of the range of possible choices [0,{len(choices)-1}]")
 			else:
 				print("Select your choice by typing the appropriate number.")
 
