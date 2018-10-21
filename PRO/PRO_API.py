@@ -10,8 +10,13 @@ timedelta = datetime.timedelta
 date = datetime.date
 datetime = datetime.datetime
 random = random
-cwd = os.path.dirname(os.path.realpath(__file__))
-
+cwd = os.path.dirname(os.path.realpath(__file__)) + "\\"
+create_uservar = """CREATE TABLE IF NOT EXISTS Var (
+name text PRIMARY KEY ON CONFLICT REPLACE,
+value numeric,
+date text,
+days integer
+);"""
 
 class Guild(NamedTuple):
 	id: int
@@ -307,11 +312,9 @@ class UserVars:
 
 	def set(self, key: str, value: Any, expire: timedelta): pass
 
-UserVars.conn = sqlite3.connect(f'{cwd}/user_var.db')
-with open(f"{cwd}/init_local.sql", "r") as fcreate:
-	create = fcreate.read()
-	c = UserVars.conn.cursor()
-	c.execute(create)
+UserVars.conn = sqlite3.connect(f'{cwd}user_var.db')
+c = UserVars.conn.cursor()
+c.execute(create_uservar)
 
 
 class Items:
