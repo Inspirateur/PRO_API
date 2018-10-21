@@ -329,7 +329,7 @@ class User:
 
 	def shop(self, shop_id: int): pass
 
-	def pause(self)->Union[True, None]: pass
+	def pause(self)->Union[bool, None]: pass
 
 	def select(self, question: str, choices: list)->Tuple[int, str]:
 		print(question)
