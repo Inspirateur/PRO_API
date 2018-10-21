@@ -376,7 +376,7 @@ class User:
 	coins: int
 	playtime: timedelta
 	guild: Guild
-	vars: UserVars
+	vars =  UserVars
 	pokes: Pokes
 	team: Pokes
 	items: Items
