@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 import datetime
 import random
 from typing import Union, Tuple, NamedTuple, Iterator, Any, List, Optional, Type
@@ -15,7 +15,7 @@ class Guild(NamedTuple):
 	rank: int
 
 
-class Region(enum):
+class Region(Enum):
 	kanto = 1
 	johto = 2
 	hoenn = 3
@@ -285,7 +285,7 @@ class NPC:
 	def last_fight(self)->datetime: pass
 
 
-class BattleResult(enum):
+class BattleResult(Enum):
 	pass
 
 
