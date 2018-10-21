@@ -1,12 +1,16 @@
 from enum import Enum
 import datetime
 import random
-from typing import Union, Tuple, NamedTuple, Iterator, Any, List, Optional, Type
+import os
+import sqlite3
+from sqlite3 import Error
+from typing import Union, Tuple, NamedTuple, Iterator, Any, List, Optional
 
 timedelta = datetime.timedelta
 date = datetime.date
 datetime = datetime.datetime
 random = random
+cwd = os.path.dirname(os.path.realpath(__file__))
 
 
 class Guild(NamedTuple):
@@ -290,11 +294,24 @@ class BattleResult(Enum):
 
 
 class UserVars:
-	def __getattr__(self, item: str)->Any: pass
+	conn = None
 
-	def __setattr__(self, key: str, value: Any): pass
+	def __getattr__(self, item: str)->Any:
+		c = UserVars.conn.cursor()
+		c.execute(f"SELECT value FROM Var WHERE name=?", item)
+		return c.fetchone[0]
+
+	def __setattr__(self, key: str, value: Any):
+		c = UserVars.conn.cursor()
+		c.execute("INSERT INTO Var(name, value) VALUES(?, ?)", key, value)
 
 	def set(self, key: str, value: Any, expire: timedelta): pass
+
+UserVars.conn = sqlite3.connect(f'{cwd}/user_var.db')
+with open(f"{cwd}/init_local.sql", "r") as fcreate:
+	create = fcreate.read()
+	c = UserVars.conn.cursor()
+	c.execute(create)
 
 
 class Items:
