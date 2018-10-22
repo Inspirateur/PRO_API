@@ -303,12 +303,16 @@ class UserVars:
 
 	def __getattr__(self, item: str)->Any:
 		c = UserVars.conn.cursor()
-		c.execute(f"SELECT value FROM Var WHERE name=?", item)
-		return c.fetchone[0]
+		c.execute(f'SELECT value FROM Var WHERE name="{item}"')
+		res = c.fetchone()
+		if res is None:
+			return res
+		return res[0]
 
 	def __setattr__(self, key: str, value: Any):
 		c = UserVars.conn.cursor()
-		c.execute("INSERT INTO Var(name, value) VALUES(?, ?)", key, value)
+		c.execute(f'INSERT INTO Var(name, value) VALUES("{key}", {repr(value)})')
+		UserVars.conn.commit()
 
 	def set(self, key: str, value: Any, expire: timedelta): pass
 
