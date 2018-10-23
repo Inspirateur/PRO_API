@@ -9,6 +9,8 @@ timedelta = dt.timedelta
 date = dt.date
 datetime = dt.datetime
 random = random
+dateformat = "%Y-%m-%d %H:%M:%S"
+sec_in_days = 86400
 cwd = os.path.dirname(os.path.realpath(__file__)) + "\\"
 create_uservar = """CREATE TABLE IF NOT EXISTS Var (
 name text PRIMARY KEY ON CONFLICT REPLACE,
@@ -300,12 +302,26 @@ class BattleResult(Enum):
 class UserVars:
 	conn = None
 
+	@staticmethod
+	def delete_var(item: str):
+		c = UserVars.conn.cursor()
+		c.execute(f"DELETE FROM Var WHERE name='{item}'")
+		UserVars.conn.commit()
+
 	def __getattr__(self, item: str)->Any:
 		c = UserVars.conn.cursor()
-		c.execute(f"SELECT value FROM Var WHERE name='{item}'")
+		c.execute(f"SELECT value, date FROM Var WHERE name='{item}'")
 		res = c.fetchone()
 		if res is None:
 			return res
+
+		# If res is not an expire var
+		if res[1] is None:
+			return res[0]
+
+		# res is an expire var we must check for expiration
+		if Expire.check_expire(item) is None:
+			return None
 		return res[0]
 
 	def __setattr__(self, key: str, value: Any):
@@ -315,25 +331,35 @@ class UserVars:
 
 	def set(self, key: str, value: Any, expire: timedelta):
 		c = UserVars.conn.cursor()
-		# 86400 is the amount of seconds in 1 day
-		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, '{datetime.now().split('.')[0]}', {expire.seconds/86400})")
+		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, '{datetime.now().strftime(dateformat)}', {expire.total_seconds()/sec_in_days})")
 		UserVars.conn.commit()
 
-class Expire:
-	conn = None
 
-	def __getattr__(self, item: str) -> Any:
+class Expire:
+	@staticmethod
+	def check_expire(item: str) -> Union[None, timedelta]:
 		c = UserVars.conn.cursor()
 		c.execute(f"SELECT date, days FROM Var WHERE name='{item}'")
 		res = c.fetchone()
 		if res is None:
 			return res
-		dateobj = datetime.strptime(res[0], "%Y-%m-%d %H:%M:%S")
-		print(dateobj)
-		print(res[1])
-		
+		# parse the set date
+		dateobj = datetime.strptime(res[0], dateformat)
+		# get the old delta
+		olddelta = timedelta(seconds=res[1]*sec_in_days)
+		# compare the set date with now
+		datedelta = datetime.now() - dateobj
+		# compare this with the original delta ("days")
+		newdelta = olddelta - datedelta
+		if newdelta.total_seconds() < 0:
+			UserVars.delete_var(item)
+			return None
+		return newdelta
+
+	def __getattr__(self, item: str) -> timedelta:
+		return Expire.check_expire(item)
+
 UserVars.conn = sqlite3.connect(f'{cwd}user_var.db')
-Expire.conn = UserVars.conn
 c = UserVars.conn.cursor()
 c.execute(create_uservar)
 
