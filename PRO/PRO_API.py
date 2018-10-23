@@ -315,7 +315,8 @@ class UserVars:
 
 	def set(self, key: str, value: Any, expire: timedelta):
 		c = UserVars.conn.cursor()
-		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, '{datetime.now()}', {expire.days})")
+		# 86400 is the amount of seconds in 1 day
+		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, '{datetime.now().split('.')[0]}', {expire.seconds/86400})")
 		UserVars.conn.commit()
 
 class Expire:
@@ -327,8 +328,10 @@ class Expire:
 		res = c.fetchone()
 		if res is None:
 			return res
-		print(res)
-
+		dateobj = datetime.strptime(res[0], "%Y-%m-%d %H:%M:%S")
+		print(dateobj)
+		print(res[1])
+		
 UserVars.conn = sqlite3.connect(f'{cwd}user_var.db')
 Expire.conn = UserVars.conn
 c = UserVars.conn.cursor()
