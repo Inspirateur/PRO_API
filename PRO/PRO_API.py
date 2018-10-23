@@ -303,7 +303,7 @@ class UserVars:
 
 	def __getattr__(self, item: str)->Any:
 		c = UserVars.conn.cursor()
-		c.execute(f'SELECT value FROM Var WHERE name="{item}"')
+		c.execute(f"SELECT value FROM Var WHERE name='{item}'")
 		res = c.fetchone()
 		if res is None:
 			return res
@@ -311,12 +311,27 @@ class UserVars:
 
 	def __setattr__(self, key: str, value: Any):
 		c = UserVars.conn.cursor()
-		c.execute(f'INSERT INTO Var(name, value) VALUES("{key}", {repr(value)})')
+		c.execute(f"INSERT INTO Var(name, value) VALUES('{key}', {repr(value)})")
 		UserVars.conn.commit()
 
-	def set(self, key: str, value: Any, expire: timedelta): pass
+	def set(self, key: str, value: Any, expire: timedelta):
+		c = UserVars.conn.cursor()
+		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, {datetime.datetime.now()}, {expire.days})")
+		UserVars.conn.commit()
+
+class Expire:
+	conn = None
+
+	def __getattr__(self, item: str) -> Any:
+		c = UserVars.conn.cursor()
+		c.execute(f"SELECT date, days FROM Var WHERE name='{item}'")
+		res = c.fetchone()
+		if res is None:
+			return res
+		print(res)
 
 UserVars.conn = sqlite3.connect(f'{cwd}user_var.db')
+Expire.conn = UserVars.conn
 c = UserVars.conn.cursor()
 c.execute(create_uservar)
 
@@ -381,6 +396,7 @@ class User:
 	playtime: timedelta
 	guild: Guild
 	vars = UserVars()
+	expire = Expire()
 	pokes: Pokes
 	team: Pokes
 	items: Items
