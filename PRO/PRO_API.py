@@ -1,14 +1,13 @@
 from enum import Enum
-import datetime
+import datetime as dt
 import random
 import os
 import sqlite3
-from sqlite3 import Error
 from typing import Union, Tuple, NamedTuple, Iterator, Any, List, Optional
 
-timedelta = datetime.timedelta
-date = datetime.date
-datetime = datetime.datetime
+timedelta = dt.timedelta
+date = dt.date
+datetime = dt.datetime
 random = random
 cwd = os.path.dirname(os.path.realpath(__file__)) + "\\"
 create_uservar = """CREATE TABLE IF NOT EXISTS Var (
@@ -316,7 +315,7 @@ class UserVars:
 
 	def set(self, key: str, value: Any, expire: timedelta):
 		c = UserVars.conn.cursor()
-		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, {datetime.datetime.now()}, {expire.days})")
+		c.execute(f"INSERT INTO Var VALUES('{key}', {repr(value)}, '{datetime.now()}', {expire.days})")
 		UserVars.conn.commit()
 
 class Expire:
